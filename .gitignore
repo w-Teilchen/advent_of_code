@@ -1,1 +1,7 @@
+# Inputs to Advent of Code problems should not be tracked in git
 input.txt
+input
+
+# Rust specific ignores
+target/
+**/*.rs.bkp
