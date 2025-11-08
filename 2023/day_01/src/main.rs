@@ -1,5 +1,31 @@
 use std::{fs};
 
+static CHARACTER_TO_NUMBER: &[( &str, u32)] = &[
+        ("1", 1),
+        ("2", 2),
+        ("3", 3),
+        ("4", 4),
+        ("5", 5),
+        ("6", 6),
+        ("7", 7),
+        ("8", 8),
+        ("9", 9),
+        ("0", 0),
+    ];
+
+static WORD_TO_NUMBER: &[( &str, u32)] = &[
+        ("one", 1),
+        ("two", 2),
+        ("three", 3),
+        ("four", 4),
+        ("five", 5),
+        ("six", 6),
+        ("seven", 7),
+        ("eight", 8),
+        ("nine", 9),
+        ("zero", 0),
+    ];
+
 fn main() {
     first_puzzle("example");
     first_puzzle("input");
@@ -12,90 +38,50 @@ fn first_puzzle(input: &str) {
 
     let mut total = 0;
     for line in contents.lines() {
-        total += extract_digits(line);
+        total += extract_values(line, &CHARACTER_TO_NUMBER);
     }
     println!("{}", total);
-}
-
-fn extract_digits(line: &str) -> u32 {
-    let first_digit = line
-        .chars()
-        .find(|c| c.is_ascii_digit())
-        .and_then(|c| c.to_digit(10))
-        .unwrap_or(0);
-
-    let last_digit = line
-        .chars()
-        .rev()
-        .find(|c| c.is_ascii_digit())
-        .and_then(|c| c.to_digit(10))
-        .unwrap_or(0);
-    first_digit * 10 + last_digit
 }
 
 fn second_puzzle(input: &str) {
     let contents = fs::read_to_string(input).expect("Something went wrong reading the file");
 
     let mut total = 0;
+    let combined_mappings: Vec<(&str, u32)> = WORD_TO_NUMBER.iter().chain(CHARACTER_TO_NUMBER.iter()).cloned().collect();
     for line in contents.lines() {
-        let converted_line = convert(line.to_string());
-        total += extract_digits(&converted_line);
-    }
 
+        total += extract_values(line, &combined_mappings);
+    }
     println!("{}", total);
 }
 
-fn convert(mut string: String) -> String {
-    let mut converted_string = String::new();
-    let mappings = vec![
-        ("one", "1"),
-        ("1", "1"),
-        ("two", "2"),
-        ("2", "2"),
-        ("three", "3"),
-        ("3", "3"),
-        ("four", "4"),
-        ("4", "4"),
-        ("five", "5"),
-        ("5", "5"),
-        ("six", "6"),
-        ("6", "6"),
-        ("seven", "7"),
-        ("7", "7"),
-        ("eight", "8"),
-        ("8", "8"),
-        ("nine", "9"),
-        ("9", "9"),
-        ("zero", "0"),
-        ("0", "0"),
-    ];
-
-    'beginning: while !string.is_empty() {
-        for (word, digit) in &mappings {
-            if string.starts_with(word) {
-                let n = word.len();
-                string.drain(..n);
-                converted_string.push_str(digit);
-                break 'beginning;
-            }
-        }
-
-        let ch = string.chars().next().unwrap();
-        converted_string.push(ch);
-        let ch_len = ch.len_utf8();
-        string.drain(..ch_len);
-    }
-
-    converted_string.push_str(&string);
-    while !converted_string.is_empty() {
-        for (word, digit) in &mappings {
-            if converted_string.ends_with(word) {
-                return format!("{}{}", converted_string, digit);
-            }
-        }
-
-        converted_string.pop();
-    }
-
-    String::new()
+fn extract_values(line: &str, mappings: &[( &str, u32)]) -> u32 {
+    return 10 * extract_first_digit(line, mappings) + extract_last_digit(line, mappings);
 }
+
+fn extract_first_digit(line: &str, mappings: &[( &str, u32)]) -> u32 {
+    let mut line = line.to_string();
+    while !line.is_empty() {
+        for (word, digit) in mappings {
+            if line.starts_with(word) {
+                return *digit;
+            }
+        }
+        line.remove(0);
+    }
+    0
+}
+
+fn extract_last_digit(line: &str, mappings: &[( &str, u32)]) -> u32 {
+    let mut line = line.to_string();
+    while !line.is_empty() {
+        for (word, digit) in mappings {
+            if line.ends_with(word) {
+                return *digit;
+            }
+        }
+        line.pop();
+    }
+    0
+}
+
