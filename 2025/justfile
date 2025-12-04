@@ -1,0 +1,43 @@
+set dotenv-load
+
+day := `date +%d`
+dayWithout0 := trim_start_match(day, "0")
+year := "2025"
+folder := "day_" + day
+
+# Format, lint, and run the program for today.
+run:
+    #!/usr/bin/env bash
+    cd {{folder}}
+    cargo fmt
+    cargo clippy --all-targets --all-features
+    RUSTFLAGS="-Awarnings" cargo build --release
+    time ./target/release/day_{{day}}.exe
+
+bench:
+    RUSTFLAGS=-Awarnings cargo build --release
+    hyperfine --warmup 5 ./target/release/{{day}}
+
+# Begin working on todays problem.
+# Downloads input, creates template and opens the problem and code.
+begin: _folders
+    cat template.rs | sed -e "s/DAY/{{day}}/g" >> src/bin/{{day}}.rs
+    rustfmt
+    curl --silent "https://adventofcode.com/{{year}}/day/{{dayWithout0}}/input" -H "Cookie: session=$AOC_SESSION" > "input/{{day}}"
+    touch input/{{day}}-test
+    $EDITOR src/main.rs
+    $EDITOR input/{{day}}-test
+    open "https://adventofcode.com/{{year}}/day/{{dayWithout0}}"
+
+# Makes sure that folders exist
+_folders:
+    mkdir -p input src/bin
+
+# Creates all input files. Use this to start using the repo.
+init: _folders
+    #!/usr/bin/env bash
+    for i in $(seq -w 1 25);
+    do
+        touch input/$i
+        touch input/$i-test
+    done
