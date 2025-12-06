@@ -15,29 +15,30 @@ run:
     time ./target/release/day_{{day}}.exe
 
 bench:
-    RUSTFLAGS=-Awarnings cargo build --release
-    hyperfine --warmup 5 ./target/release/{{day}}
-
-# Begin working on todays problem.
-# Downloads input, creates template and opens the problem and code.
-begin: _folders
-    cat template.rs | sed -e "s/DAY/{{day}}/g" >> src/bin/{{day}}.rs
-    rustfmt
-    curl --silent "https://adventofcode.com/{{year}}/day/{{dayWithout0}}/input" -H "Cookie: session=$AOC_SESSION" > "input/{{day}}"
-    touch input/{{day}}-test
-    $EDITOR src/main.rs
-    $EDITOR input/{{day}}-test
-    open "https://adventofcode.com/{{year}}/day/{{dayWithout0}}"
-
-# Makes sure that folders exist
-_folders:
-    mkdir -p input src/bin
-
-# Creates all input files. Use this to start using the repo.
-init: _folders
     #!/usr/bin/env bash
-    for i in $(seq -w 1 25);
-    do
-        touch input/$i
-        touch input/$i-test
-    done
+    cd {{folder}}
+    RUSTFLAGS=-Awarnings cargo build --release
+    # hyperfine --warmup 5 ./target/release/day_{{day}}.exe
+    hyperfine --warmup 5 'cargo run --release --quiet --bin day_{{day}}'
+
+
+# Begin working on today's problem.
+# Downloads input, creates template and opens the problem and code.
+begin:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s expand_aliases
+    source ~/.bashrc
+
+    cargo new {{folder}}
+    cd {{folder}}
+    cargo add lib --path ../lib
+    cp ../template.rs "src/main.rs"
+    cargo fmt
+    curl --silent "https://adventofcode.com/{{year}}/day/{{dayWithout0}}/input" \
+        -H "Cookie: session=$AOC_SESSION" > "input"
+    touch example
+    code .
+    code example
+    start "https://adventofcode.com/{{year}}/day/{{dayWithout0}}"
+
